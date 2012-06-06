@@ -10,6 +10,20 @@
     (let [trim-pattern (apply str chars-coll)]
       (second (re-find (re-pattern (format "[%s]*([^%s].*[^%s])[%s]*" trim-pattern trim-pattern trim-pattern trim-pattern)) string)))))
 
+(defn ^String trim-chars-right
+  "Removes characters in coll chars from the right of string"
+  [chars-coll ^CharSequence string]
+  (if string
+    (let [trim-pattern (apply str chars-coll)]
+      (second (re-find (re-pattern (format "^(.*[^%s])[%s]*" trim-pattern trim-pattern)) string)))))
+
+(defn ^String trim-chars-left
+  "Removes characters in coll chars from the left of string"
+  [chars-coll ^CharSequence string]
+  (if string
+    (let [trim-pattern (apply str chars-coll)]
+      (second (re-find (re-pattern (format "[%s]*([^%s].*)$" trim-pattern trim-pattern trim-pattern trim-pattern)) string)))))
+
 ;; test
 (defn has-suffix?
   "Checks a string for a suffix"
