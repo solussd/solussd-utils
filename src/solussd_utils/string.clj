@@ -36,10 +36,28 @@
   (not (nil? (re-find (re-pattern (str "^" (Pattern/quote prefix))) s))))
 
 
+;; format
+(defn- replace-by
+  [^CharSequence s re f]
+  (let [m (re-matcher re s)]
+    (let [buffer (StringBuffer. (.length s))]
+      (loop []
+        (if (.find m)
+          (do (.appendReplacement m buffer (f (re-groups m)))
+              (recur))
+          (do (.appendTail m buffer)
+              (.toString buffer)))))))
 
 
+(defn dashes-to-camel
+  "Converts a dash-separated-string to a camelCaseString"
+  [s]
+  (replace-by s #"\-([a-z])" (comp string/upper-case second)))
 
-
+(defn camel-to-dash
+  "Converts a camelCaseString to a dash-separated-string"
+  [s]
+  (replace-by s #"(.)([A-Z])" (fn [m] (str (second m) \- (string/lower-case (nth m 2))))))
 
 ;; xml
 (defn xml-escape
