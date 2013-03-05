@@ -2,6 +2,28 @@
   (:require [clojure.string :as string])
   (:import [java.util.regex Pattern]))
 
+;; regex
+(defn regex-escape
+  "Takes a string and escapes all PCRE regular expression reserve characters
+ which are:"
+  [s]
+  (let [escape-map {\. "\\."
+                    \^ "\\^"
+                    \$ "\\$"
+                    \* "\\*"
+                    \+ "\\+"
+                    \? "\\?"
+                    \( "\\("
+                    \) "\\)"
+                    \[ "\\["
+                    \] "\\]"
+                    \- "\\-"
+                    \\ "\\\\"
+                    \{ "\\{"
+                    \} "\\}"
+                    \  "\\ "}]
+    (string/escape s escape-map)))
+
 ;; sanitize
 (defn ^String trim-chars
   "Removes characters in coll chars from the left and right of string"
@@ -48,16 +70,26 @@
           (do (.appendTail m buffer)
               (.toString buffer)))))))
 
+(defn to-camel
+  "Converts a string separated by any of separators to ACamelCaseString.
+If no separator characters are provided, defaults to - and _."
+  ([s separators & {:keys [titleize] :or {titleize true}}]
+     (replace-by (cond-> s titleize string/capitalize)
+                 (re-pattern (format "[%s]+(.)" (regex-escape (apply str separators))))
+                 (comp string/upper-case second)))
+  ([s]
+     (to-camel s "-_")))
 
 (defn dashes-to-camel
   "Converts a dash-separated-string to a camelCaseString"
   [s]
-  (replace-by s #"\-([a-z])" (comp string/upper-case second)))
+  (to-camel s "-"))
 
 (defn camel-to-dash
   "Converts a camelCaseString to a dash-separated-string"
-  [s]
-  (replace-by s #"(.)([A-Z])" (fn [m] (str (second m) \- (string/lower-case (nth m 2))))))
+  [s & {:keys [lower-case] :or {lower-case true}}]
+  (cond-> (replace-by s #"(.)([A-Z])" (fn [m] (str (second m) \- (string/lower-case (nth m 2)))))
+          lower-case string/lower-case))
 
 ;; xml
 (defn xml-escape
